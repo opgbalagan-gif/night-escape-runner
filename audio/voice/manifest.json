@@ -1,0 +1,11 @@
+{
+  "clips": {
+    "run": [],
+    "jump": [],
+    "coin": [],
+    "hit": [],
+    "near_caught": [],
+    "caught": [],
+    "game_over": []
+  }
+}

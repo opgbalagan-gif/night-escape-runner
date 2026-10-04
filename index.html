@@ -54,13 +54,7 @@
           </div>
         </section>
 
-        <div id="caughtMeme" class="caught-meme" hidden aria-label="Мемная реакция на поимку">
-          <div class="caught-meme-flash"></div>
-          <span class="caught-meme-title">ПОЙМАЛИ!</span>
-          <img id="caughtMemeImage" src="media/public/memes/end.png" alt="Мемная реакция Меллстроя" />
-        </div>
-        <button id="skipBtn" class="skip-btn" type="button" hidden>Пропустить ›</button>
-        <video id="defeatVideo" class="end-video" src="art/higgsfield/animations/game-over.mp4" muted playsinline loop preload="metadata" hidden></video>
+        <video id="caughtMemeVideo" class="end-meme-video" playsinline preload="metadata" poster="media/public/memes/end.png" aria-label="Мемное видео на фоне экрана результата" hidden></video>
 
         <section id="endScreen" class="screen end-screen" aria-labelledby="endTitle" hidden>
           <div class="screen-card end-card">
@@ -79,8 +73,11 @@
               </div>
               <small id="scoreHint" aria-live="polite"></small>
             </form>
+            <div class="end-leaderboard">
+              <h3>Таблица рекордов</h3>
+              <ol id="endLeaderboardList" class="leaderboard-list"></ol>
+            </div>
             <button id="retryBtn" class="primary-btn" type="button">Ещё попытка</button>
-            <button id="endLeaderboardBtn" class="text-btn leaderboard-link" type="button">Таблица рекордов</button>
           </div>
         </section>
 

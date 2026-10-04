@@ -34,15 +34,12 @@
     jumpBtn: document.getElementById('jumpBtn'),
     introCircle: document.getElementById('introCircle'),
     skipIntroBtn: document.getElementById('skipIntroBtn'),
-    caughtMeme: document.getElementById('caughtMeme'),
-    caughtMemeImage: document.getElementById('caughtMemeImage'),
-    defeatVideo: document.getElementById('defeatVideo'),
-    skipBtn: document.getElementById('skipBtn'),
+    caughtMemeVideo: document.getElementById('caughtMemeVideo'),
     finalDistance: document.getElementById('finalDistance'),
     finalCoins: document.getElementById('finalCoins'),
     bestDistance: document.getElementById('bestDistance'),
     introLeaderboardBtn: document.getElementById('introLeaderboardBtn'),
-    endLeaderboardBtn: document.getElementById('endLeaderboardBtn'),
+    endLeaderboardList: document.getElementById('endLeaderboardList'),
     leaderboardScreen: document.getElementById('leaderboardScreen'),
     leaderboardList: document.getElementById('leaderboardList'),
     closeLeaderboardBtn: document.getElementById('closeLeaderboardBtn'),
@@ -66,7 +63,6 @@
   let audioContext;
   let lastFrame = performance.now();
   let toastTimer;
-  let cutsceneTimer;
   let best = readBest();
   let leaderboard = readLeaderboard();
   let leaderboardOpen = false;
@@ -74,7 +70,8 @@
   let currentRunId = null;
   let game;
   let lastMeme = '';
-  const caughtMemes = ['end.png', 'stop.png', 'reaction.png'];
+  let memeAudioFinished = false;
+  const caughtMemes = ['end', 'stop', 'reaction'];
 
   class VoiceBank {
     constructor() {
@@ -157,6 +154,7 @@
       empty.className = 'leaderboard-empty';
       empty.textContent = 'Пока нет забегов. Стань первым!';
       ui.leaderboardList.append(empty);
+      ui.endLeaderboardList.replaceChildren(empty.cloneNode(true));
       return;
     }
     leaderboard.forEach((row, index) => {
@@ -171,6 +169,7 @@
       item.append(rank, name, score);
       ui.leaderboardList.append(item);
     });
+    ui.endLeaderboardList.replaceChildren(...Array.from(ui.leaderboardList.children, item => item.cloneNode(true)).slice(0, 5));
   }
 
   function openLeaderboard(event) {
@@ -244,7 +243,6 @@
   function startGame() {
     if (!ready) return;
     unlockAudio();
-    clearTimeout(cutsceneTimer);
     clearTimeout(toastTimer);
     ui.toast.classList.remove('visible');
     ui.toast.textContent = '';
@@ -252,10 +250,8 @@
     ui.skipIntroBtn.hidden = true;
     ui.start.disabled = false;
     ui.start.textContent = 'Смотреть вступление';
-    ui.caughtMeme.hidden = true;
-    ui.defeatVideo.pause();
-    ui.defeatVideo.hidden = true;
-    ui.skipBtn.hidden = true;
+    ui.caughtMemeVideo.pause();
+    ui.caughtMemeVideo.hidden = true;
     ui.intro.hidden = true;
     ui.pause.hidden = true;
     ui.end.hidden = true;
@@ -424,30 +420,16 @@
   }
 
   function beginCaught() {
-    mode = 'cutscene';
-    ui.jumpBtn.hidden = true;
-    ui.pauseBtn.hidden = true;
     const choices = caughtMemes.filter(name => name !== lastMeme);
     lastMeme = choices[Math.floor(Math.random() * choices.length)];
-    ui.caughtMemeImage.src = `media/public/memes/${lastMeme}`;
-    ui.caughtMeme.hidden = false;
-    ui.caughtMemeImage.style.animation = 'none';
-    void ui.caughtMemeImage.offsetWidth;
-    ui.caughtMemeImage.style.animation = '';
-    ui.skipBtn.hidden = false;
-    voice.play('caught', 0, true);
-    cutsceneTimer = setTimeout(showEnd, 2900);
+    showEnd();
   }
 
   function showEnd() {
     if (mode === 'over') return;
-    clearTimeout(cutsceneTimer);
     mode = 'over';
-    ui.caughtMeme.hidden = true;
-    ui.skipBtn.hidden = true;
-    ui.defeatVideo.hidden = false;
-    ui.defeatVideo.currentTime = 0;
-    ui.defeatVideo.play().catch(() => {});
+    ui.jumpBtn.hidden = true;
+    ui.pauseBtn.hidden = true;
     ui.end.hidden = false;
     ui.finalDistance.textContent = `${Math.floor(game.distance)} м`;
     ui.finalCoins.textContent = String(game.coins);
@@ -458,8 +440,16 @@
     try { ui.playerName.value = localStorage.getItem('nightRunnerScoreNameV2') || 'Игрок'; }
     catch { ui.playerName.value = 'Игрок'; }
     addOrUpdateScore(ui.playerName.value);
-    voice.play('game_over', 0, true);
-    ui.retry.focus();
+    memeAudioFinished = false;
+    ui.caughtMemeVideo.src = `media/public/memes/${lastMeme}.mp4`;
+    ui.caughtMemeVideo.poster = `media/public/memes/${lastMeme}.png`;
+    ui.caughtMemeVideo.muted = muted;
+    ui.caughtMemeVideo.currentTime = 0;
+    ui.caughtMemeVideo.hidden = false;
+    ui.caughtMemeVideo.play().catch(() => {
+      ui.caughtMemeVideo.muted = true;
+      ui.caughtMemeVideo.play().catch(() => {});
+    });
   }
 
   function burst(x, y, color, count) {
@@ -729,8 +719,14 @@
   ui.skipIntroBtn.addEventListener('click', startGame);
   ui.introCircle.addEventListener('ended', startGame);
   ui.retry.addEventListener('click', startGame);
+  ui.caughtMemeVideo.addEventListener('ended', () => {
+    if (mode !== 'over') return;
+    memeAudioFinished = true;
+    ui.caughtMemeVideo.muted = true;
+    ui.caughtMemeVideo.currentTime = 0;
+    ui.caughtMemeVideo.play().catch(() => {});
+  });
   ui.introLeaderboardBtn.addEventListener('click', openLeaderboard);
-  ui.endLeaderboardBtn.addEventListener('click', openLeaderboard);
   ui.closeLeaderboardBtn.addEventListener('click', closeLeaderboard);
   ui.scoreForm.addEventListener('submit', event => {
     event.preventDefault();
@@ -741,13 +737,13 @@
   ui.pauseBtn.addEventListener('click', togglePause);
   ui.jumpBtn.addEventListener('pointerdown', event => { event.preventDefault(); event.stopPropagation(); jump(); });
   canvas.addEventListener('pointerdown', event => { event.preventDefault(); if (mode === 'playing') jump(); });
-  ui.skipBtn.addEventListener('click', showEnd);
   ui.soundBtn.addEventListener('click', () => {
     muted = !muted;
     ui.soundBtn.textContent = muted ? '♪̸' : '♪';
     ui.soundBtn.setAttribute('aria-label', muted ? 'Включить звук' : 'Выключить звук');
     if (muted && voice.current) voice.current.pause();
     ui.introCircle.muted = muted;
+    ui.caughtMemeVideo.muted = muted || memeAudioFinished;
     if (!muted) unlockAudio();
   });
   window.addEventListener('keydown', event => {

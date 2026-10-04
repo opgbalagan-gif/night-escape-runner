@@ -1,0 +1,5 @@
+.tools/
+media/source/
+art/higgsfield/rejected/
+node_modules/
+*.log

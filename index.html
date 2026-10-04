@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#071526" />
+    <title>Ночной побег — 2D раннер</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="game.js" defer></script>
+  </head>
+  <body>
+    <main class="stage" aria-label="Ночной побег">
+      <div class="game-frame">
+        <canvas id="game" width="540" height="960" tabindex="0" aria-label="Игровое поле. Нажмите пробел, стрелку вверх или коснитесь экрана для прыжка"></canvas>
+
+        <header class="hud" aria-label="Состояние забега">
+          <div class="hud-row">
+            <div class="pill coin-pill"><span class="coin-mark" aria-hidden="true">✦</span><strong id="coins">0</strong></div>
+            <div class="pill distance-pill"><span>ДИСТАНЦИЯ</span><strong id="distance">0 м</strong></div>
+            <button id="soundBtn" class="icon-btn sound-btn" type="button" aria-label="Выключить звук" title="Звук">♪</button>
+            <button id="pauseBtn" class="icon-btn" type="button" aria-label="Пауза" title="Пауза" hidden>Ⅱ</button>
+          </div>
+          <div class="status-row">
+            <div class="hearts" id="hearts" aria-label="Три попытки">♥ ♥ ♥</div>
+            <div class="chase" aria-label="Близость преследователей">
+              <span>ПОГОНЯ</span>
+              <div class="chase-track"><div id="chaseFill" class="chase-fill"></div></div>
+            </div>
+          </div>
+        </header>
+
+        <div id="toast" class="toast" aria-live="polite"></div>
+
+        <section id="introScreen" class="screen intro-screen" aria-labelledby="introTitle">
+          <div class="screen-card">
+            <span class="eyebrow">ПРИМОРСКАЯ НОЧЬ · БЕСКОНЕЧНЫЙ ЗАБЕГ</span>
+            <video id="introCircle" class="intro-circle" src="media/public/intro-circle.mp4" playsinline preload="metadata" aria-label="Вступительный видеокружок"></video>
+            <h1 id="introTitle">НОЧНОЙ<br /><em>ПОБЕГ</em></h1>
+            <p>Беги по одной дороге. Перепрыгивай ящики и конусы, собирай монеты и держи дистанцию от преследователей.</p>
+            <button id="startBtn" class="primary-btn" type="button" disabled>Загрузка…</button>
+            <button id="skipIntroBtn" class="text-btn" type="button" hidden>Пропустить вступление</button>
+            <button id="introLeaderboardBtn" class="text-btn leaderboard-link" type="button">Таблица рекордов</button>
+            <div class="control-hint"><span>ПРОБЕЛ / ↑</span><span>или касание экрана — прыжок</span></div>
+          </div>
+        </section>
+
+        <section id="pauseScreen" class="screen pause-screen" aria-labelledby="pauseTitle" hidden>
+          <div class="screen-card compact">
+            <span class="eyebrow">ЗАБЕГ ПРИОСТАНОВЛЕН</span>
+            <h2 id="pauseTitle">Пауза</h2>
+            <p>Выдохни. Дорога подождёт.</p>
+            <button id="resumeBtn" class="primary-btn" type="button">Продолжить</button>
+            <button id="restartFromPauseBtn" class="text-btn" type="button">Начать заново</button>
+          </div>
+        </section>
+
+        <div id="caughtMeme" class="caught-meme" hidden aria-label="Мемная реакция на поимку">
+          <div class="caught-meme-flash"></div>
+          <span class="caught-meme-title">ПОЙМАЛИ!</span>
+          <img id="caughtMemeImage" src="media/public/memes/end.png" alt="Мемная реакция Меллстроя" />
+        </div>
+        <button id="skipBtn" class="skip-btn" type="button" hidden>Пропустить ›</button>
+        <video id="defeatVideo" class="end-video" src="art/higgsfield/animations/game-over.mp4" muted playsinline loop preload="metadata" hidden></video>
+
+        <section id="endScreen" class="screen end-screen" aria-labelledby="endTitle" hidden>
+          <div class="screen-card end-card">
+            <span class="eyebrow">ЗАБЕГ ОКОНЧЕН</span>
+            <h2 id="endTitle">Поймали!</h2>
+            <div class="result-grid">
+              <div><span>Дистанция</span><strong id="finalDistance">0 м</strong></div>
+              <div><span>Монеты</span><strong id="finalCoins">0</strong></div>
+              <div><span>Рекорд</span><strong id="bestDistance">0 м</strong></div>
+            </div>
+            <form id="scoreForm" class="score-form">
+              <label for="playerName">Имя для таблицы рекордов</label>
+              <div class="score-form-row">
+                <input id="playerName" name="playerName" maxlength="14" autocomplete="nickname" aria-describedby="scoreHint" />
+                <button type="submit">Записать</button>
+              </div>
+              <small id="scoreHint" aria-live="polite"></small>
+            </form>
+            <button id="retryBtn" class="primary-btn" type="button">Ещё попытка</button>
+            <button id="endLeaderboardBtn" class="text-btn leaderboard-link" type="button">Таблица рекордов</button>
+          </div>
+        </section>
+
+        <section id="leaderboardScreen" class="screen leaderboard-screen" aria-labelledby="leaderboardTitle" hidden>
+          <div class="screen-card leaderboard-card">
+            <span class="eyebrow">НА ЭТОМ УСТРОЙСТВЕ</span>
+            <h2 id="leaderboardTitle">Рекорды</h2>
+            <ol id="leaderboardList" class="leaderboard-list"></ol>
+            <button id="closeLeaderboardBtn" class="primary-btn" type="button">Закрыть</button>
+          </div>
+        </section>
+
+        <button id="jumpBtn" class="jump-btn" type="button" aria-label="Прыгнуть" hidden>ПРЫЖОК <span>↑</span></button>
+      </div>
+      <p class="desktop-tip">ПРОБЕЛ / ↑ — ПРЫЖОК <span>·</span> P / ESC — ПАУЗА</p>
+    </main>
+  </body>
+</html>
